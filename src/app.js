@@ -8,6 +8,7 @@ const env = require('./config/env');
 const path    = require('node:path');
 const express = require('express');
 const cors    = require('cors');
+const { clerkMiddleware } = require('@clerk/express');
 
 const authRoutes       = require('./routes/auth');
 const deviceRoutes     = require('./routes/devices');
@@ -49,6 +50,10 @@ const corsOptions = {
 // Handle OPTIONS preflight for every route before any other middleware hits.
 app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
+
+// ── Clerk auth context (non-blocking — populates req.auth for all routes)
+// Must come AFTER cors so preflight requests are never rejected by Clerk.
+app.use(clerkMiddleware());
 
 // ── Body parsing ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '256kb' }));

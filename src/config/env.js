@@ -6,7 +6,7 @@
  * fails fast with a clear message instead of a cryptic runtime error.
  */
 
-const REQUIRED = ['DATABASE_URL', 'JWT_SECRET', 'REDIS_URL', 'NODE_ENV', 'PORT'];
+const REQUIRED = ['DATABASE_URL', 'JWT_SECRET', 'REDIS_URL', 'NODE_ENV', 'PORT', 'CLERK_SECRET_KEY'];
 const OPTIONAL  = ['FRONTEND_URL', 'DNS_PORT', 'STRIPE_SECRET'];
 
 const missing = REQUIRED.filter((k) => !process.env[k]);
@@ -32,6 +32,9 @@ module.exports = {
   REDIS_URL:     process.env.REDIS_URL,
   NODE_ENV:      process.env.NODE_ENV,
   PORT:          parseInt(process.env.PORT, 10),
+
+  // Clerk
+  CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
 
   // Optional — always has a usable value.
   FRONTEND_URL:  process.env.FRONTEND_URL  || '',
