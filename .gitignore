@@ -2,6 +2,8 @@
 .env
 .env.test
 *.env.local
+.env.production.local
+# dashboard/.env.production is intentionally committed (publishable key only — safe to be public)
 
 # Node
 node_modules/
