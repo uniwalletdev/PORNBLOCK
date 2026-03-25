@@ -1,27 +1,30 @@
 import axios from "axios";
-import { useAuthStore } from "../store/authStore.js";
+
+// Clerk's getToken is async — it's injected by ClerkTokenBridge in App.jsx
+// so we never call Clerk hooks outside React.
+let _getToken = () => Promise.resolve(null);
+export function setTokenGetter(fn) { _getToken = fn; }
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "/api",
   timeout: 15_000,
 });
 
-// Attach JWT to every request
-api.interceptors.request.use((config) => {
-  const token = useAuthStore.getState().token;
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+// Attach Clerk session token to every request.
+api.interceptors.request.use(async (config) => {
+  try {
+    const token = await _getToken();
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+  } catch {
+    // Not signed in — request goes without auth header.
+  }
   return config;
 });
 
-// Auto-logout on 401
+// Clerk manages session refresh automatically, so we just propagate the error.
 api.interceptors.response.use(
   (res) => res,
-  (err) => {
-    if (err.response?.status === 401) {
-      useAuthStore.getState().logout();
-    }
-    return Promise.reject(err);
-  },
+  (err) => Promise.reject(err),
 );
 
 export default api;

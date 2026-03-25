@@ -1,5 +1,5 @@
-import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { logout } from "../store/authStore.js";
+import { Outlet, NavLink } from "react-router-dom";
+import { useClerk } from "@clerk/react";
 
 const NAV = [
   { to: "/",           label: "Dashboard"  },
@@ -10,6 +10,8 @@ const NAV = [
 ];
 
 export default function Layout() {
+  const { signOut } = useClerk();
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
@@ -35,7 +37,7 @@ export default function Layout() {
           ))}
         </nav>
         <button
-          onClick={logout}
+          onClick={() => signOut()}
           className="m-3 py-2 text-sm text-brand-200 hover:text-white transition-colors"
         >
           Sign out
@@ -49,3 +51,4 @@ export default function Layout() {
     </div>
   );
 }
+
