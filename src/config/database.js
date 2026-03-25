@@ -1,28 +1,17 @@
 'use strict';
 
 const { Pool } = require('pg');
+const { DATABASE_URL, NODE_ENV } = require('./env');
 
-// Railway (and most PaaS) provide DATABASE_URL directly.
-// Fall back to individual DB_* vars for local dev.
-const poolConfig = process.env.DATABASE_URL
-  ? {
-      connectionString: process.env.DATABASE_URL,
-      // Railway Postgres requires SSL; ignore self-signed cert in production.
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-      max: 20,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 5000,
-    }
-  : {
-      host:     process.env.DB_HOST     || 'localhost',
-      port:     Number(process.env.DB_PORT) || 5432,
-      database: process.env.DB_NAME,
-      user:     process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      max:      20,
-      idleTimeoutMillis:       30000,
-      connectionTimeoutMillis: 5000,
-    };
+// DATABASE_URL is guaranteed set — validated by env.js at startup.
+const poolConfig = {
+  connectionString: DATABASE_URL,
+  // Railway Postgres requires SSL; ignore self-signed cert in production.
+  ssl: NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 5000,
+};
 
 const pool = new Pool(poolConfig);
 

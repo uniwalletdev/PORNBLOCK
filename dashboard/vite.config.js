@@ -15,7 +15,10 @@ export default defineConfig(({ mode }) => {
       "/api": {
         target: apiUrl,
         changeOrigin: true,
+        // Strip the /api prefix — backend routes start at /auth, /devices, etc.
         rewrite: (path) => path.replace(/^\/api/, ""),
+        // Allow proxying to HTTPS backends with self-signed certs in local dev.
+        secure: false,
       },
     },
   },

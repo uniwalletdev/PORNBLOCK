@@ -11,10 +11,10 @@
     "test": "jest --runInBand --forceExit",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage --forceExit",
-    "migrate": "node-pg-migrate up",
-    "migrate:down": "node-pg-migrate down",
-    "migrate:create": "node-pg-migrate create",
-    "migrate:status": "node-pg-migrate status",
+    "migrate": "node-pg-migrate up --config-file migrate.config.js",
+    "migrate:down": "node-pg-migrate down --config-file migrate.config.js",
+    "migrate:create": "node-pg-migrate create --config-file migrate.config.js",
+    "migrate:status": "node-pg-migrate status --config-file migrate.config.js",
     "seed": "node scripts/seed.js",
     "seed:hagezi": "node scripts/import-hagezi.js",
     "dns": "node src/dns/server.js",
@@ -44,7 +44,7 @@
     "testMatch": [
       "**/tests/**/*.test.js"
     ],
-    "setupFilesAfterFramework": [],
+    "setupFilesAfterEnv": [],
     "globalSetup": "./tests/setup/globalSetup.js",
     "globalTeardown": "./tests/setup/globalTeardown.js",
     "collectCoverageFrom": [

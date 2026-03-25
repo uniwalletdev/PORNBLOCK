@@ -1,10 +1,12 @@
 'use strict';
 
 const Redis = require('ioredis');
+const { REDIS_URL } = require('./env');
 
 let _available = false;
 
-const redis = new Redis(process.env.REDIS_URL || 'redis://127.0.0.1:6379', {
+// REDIS_URL is guaranteed set — validated by env.js at startup.
+const redis = new Redis(REDIS_URL, {
   // 1 retry per command so commands fail fast when Redis is down.
   maxRetriesPerRequest: 1,
   enableReadyCheck: true,
