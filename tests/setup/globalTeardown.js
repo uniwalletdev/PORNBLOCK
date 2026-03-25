@@ -15,9 +15,10 @@ module.exports = async () => {
   try {
     await pool.query(`
       TRUNCATE
-        audit_log, enrolment_tokens, violations,
-        accountability_partners, policies,
-        devices, users
+        partner_actions, partner_change_requests,
+        audit_log, violations,
+        partner_approvals, accountability_partners,
+        policies, devices, users
       RESTART IDENTITY CASCADE
     `);
   } finally {

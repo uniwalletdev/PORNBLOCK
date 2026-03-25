@@ -30,8 +30,8 @@ beforeAll(async () => {
   );
   deviceId = device.id;
 
-  // Mint a JWT
-  token = jwt.sign({ userId, role: "standard_user" }, process.env.JWT_SECRET, { expiresIn: "1h" });
+  // Mint a JWT (id field must match what auth.js issues and heartbeat.js expects)
+  token = jwt.sign({ id: userId, role: "standard_user" }, process.env.JWT_SECRET, { expiresIn: "1h" });
 });
 
 afterAll(async () => {
@@ -75,8 +75,9 @@ describe("POST /heartbeat", () => {
       [`other_${Date.now()}@pornblock.local`, hash],
     );
     const { rows: [d2] } = await pool.query(
-      "INSERT INTO devices (user_id, device_name) VALUES ($1,'Other') RETURNING id",
-      [u2.id],
+      `INSERT INTO devices (user_id, device_name, platform, device_token)
+       VALUES ($1, 'Other', 'android', $2) RETURNING id`,
+      [u2.id, `tok_other_${Date.now()}`],
     );
 
     const res = await request(app)

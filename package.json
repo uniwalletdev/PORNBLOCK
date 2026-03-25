@@ -33,7 +33,8 @@
     "node-pg-migrate": "^7.9.1",
     "pg": "^8.12.0",
     "qrcode": "^1.5.4",
-    "resend": "^6.9.4"
+    "resend": "^6.9.4",
+    "stripe": "^20.4.1"
   },
   "devDependencies": {
     "eslint": "^8.57.1",
@@ -45,6 +46,9 @@
     "testEnvironment": "node",
     "testMatch": [
       "**/tests/**/*.test.js"
+    ],
+    "setupFiles": [
+      "./tests/setup/setEnvVars.js"
     ],
     "setupFilesAfterEnv": [],
     "globalSetup": "./tests/setup/globalSetup.js",

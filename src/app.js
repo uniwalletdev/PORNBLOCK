@@ -17,6 +17,7 @@ const heartbeatRoutes  = require('./routes/heartbeat');
 const violationRoutes  = require('./routes/violations');
 const enrolRoutes      = require('./routes/enrol');
 const partnerRoutes    = require('./routes/partners');
+const billingRoutes    = require('./routes/billing');
 const errorHandler     = require('./middleware/errorHandler');
 
 const app = express();
@@ -54,9 +55,15 @@ app.use(cors(corsOptions));
 
 // ── Clerk auth context (non-blocking — populates req.auth for all routes)
 // Must come AFTER cors so preflight requests are never rejected by Clerk.
-app.use(clerkMiddleware());
+// In test mode skip Clerk: tests use JWT auth and Clerk requires a live key.
+if (env.NODE_ENV !== 'test') {
+  app.use(clerkMiddleware());
+}
 
 // ── Body parsing ─────────────────────────────────────────────────────────────
+// Stripe webhooks require the raw body to verify their HMAC signature.
+// Register the raw middleware BEFORE express.json(), scoped only to that path.
+app.use('/billing/webhook', express.raw({ type: 'application/json' }));
 app.use(express.json({ limit: '256kb' }));
 app.use(express.urlencoded({ extended: false }));
 
@@ -88,6 +95,7 @@ app.use('/violation',  violationRoutes);   // POST /violation
 app.use('/violations', violationRoutes);   // GET  /violations  (admin)
 app.use('/enrol',      enrolRoutes);       // POST /enrol/generate, GET /enrol/:token
 app.use('/partners',   partnerRoutes);     // Full accountability partner system
+app.use('/billing',    billingRoutes);     // Stripe billing: checkout, portal, webhook
 
 // ── 404 fallthrough ──────────────────────────────────────────────────────────
 app.use((_req, res) => res.status(404).json({ error: 'Route not found.' }));
@@ -96,13 +104,14 @@ app.use((_req, res) => res.status(404).json({ error: 'Route not found.' }));
 app.use(errorHandler);
 
 // ── Start ────────────────────────────────────────────────────────────────────
-const PORT = env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`PORNBLOCK API listening on port ${PORT} [${env.NODE_ENV}]`);
-  // Start background poller for 72-hour partner approval delays (skip in test).
-  if (env.NODE_ENV !== 'test') {
+// Skip listen() in test mode — supertest attaches directly to the app instance,
+// and binding the port in every test file would cause EADDRINUSE.
+if (env.NODE_ENV !== 'test') {
+  const PORT = env.PORT || 3000;
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`PORNBLOCK API listening on port ${PORT} [${env.NODE_ENV}]`);
     require('./services/partnerPoller').start();
-  }
-});
+  });
+}
 
 module.exports = app; // for testing

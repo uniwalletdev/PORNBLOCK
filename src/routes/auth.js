@@ -31,21 +31,27 @@ router.post('/register', async (req, res, next) => {
 
     // Role is always forced to 'standard_user' — no self-elevation possible
     const { rows } = await pool.query(
-      `INSERT INTO accounts (email, password_hash, role)
+      `INSERT INTO users (email, password_hash, role)
        VALUES ($1, $2, 'standard_user')
        RETURNING id, email, role, created_at`,
       [email.toLowerCase().trim(), password_hash]
     );
 
-    // Auto-create a default policy for the new user
+    // Auto-create a default policy for the new user (sensitivity_level 2 = strict)
     await pool.query(
       `INSERT INTO policies (user_id, sensitivity_level)
-       VALUES ($1, 'medium')
+       VALUES ($1, 2)
        ON CONFLICT (user_id) DO NOTHING`,
       [rows[0].id]
     );
 
-    return res.status(201).json({ user: rows[0] });
+    const token = jwt.sign(
+      { id: rows[0].id, email: rows[0].email, role: rows[0].role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' },
+    );
+
+    return res.status(201).json({ token, user: rows[0] });
   } catch (err) {
     next(err);
   }
@@ -61,7 +67,7 @@ router.post('/login', async (req, res, next) => {
     }
 
     const { rows } = await pool.query(
-      `SELECT id, email, password_hash, role FROM accounts WHERE email = $1`,
+      `SELECT id, email, password_hash, role FROM users WHERE email = $1`,
       [email.toLowerCase().trim()]
     );
 

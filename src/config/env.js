@@ -7,7 +7,7 @@
  */
 
 const REQUIRED = ['DATABASE_URL', 'JWT_SECRET', 'REDIS_URL', 'NODE_ENV', 'PORT', 'CLERK_SECRET_KEY'];
-const OPTIONAL  = ['FRONTEND_URL', 'DNS_PORT', 'STRIPE_SECRET', 'RESEND_API_KEY', 'EMAIL_FROM'];
+const OPTIONAL  = ['FRONTEND_URL', 'DNS_PORT', 'STRIPE_SECRET', 'STRIPE_WEBHOOK_SECRET', 'STRIPE_PRICE_PERSONAL', 'STRIPE_PRICE_FAMILY', 'RESEND_API_KEY', 'EMAIL_FROM'];
 
 const missing = REQUIRED.filter((k) => !process.env[k]);
 if (missing.length > 0) {
@@ -39,7 +39,10 @@ module.exports = {
   // Optional — always has a usable value.
   FRONTEND_URL:  process.env.FRONTEND_URL  || '',
   DNS_PORT:      parseInt(process.env.DNS_PORT, 10) || 53,
-  STRIPE_SECRET:    process.env.STRIPE_SECRET    || null,
-  RESEND_API_KEY:   process.env.RESEND_API_KEY   || null,
-  EMAIL_FROM:       process.env.EMAIL_FROM       || 'PORNBLOCK <noreply@pornblock.app>',
+  STRIPE_SECRET:           process.env.STRIPE_SECRET           || null,
+  STRIPE_WEBHOOK_SECRET:   process.env.STRIPE_WEBHOOK_SECRET   || null,
+  STRIPE_PRICE_PERSONAL:   process.env.STRIPE_PRICE_PERSONAL   || null,
+  STRIPE_PRICE_FAMILY:     process.env.STRIPE_PRICE_FAMILY     || null,
+  RESEND_API_KEY:          process.env.RESEND_API_KEY          || null,
+  EMAIL_FROM:              process.env.EMAIL_FROM              || 'PORNBLOCK <noreply@pornblock.app>',
 };

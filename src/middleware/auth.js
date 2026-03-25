@@ -13,10 +13,15 @@ const { getAuth } = require('@clerk/express');
  */
 function authenticate(req, res, next) {
   // ── Clerk path (dashboard users) ─────────────────────────────────────────
-  const clerkAuth = getAuth(req);
-  if (clerkAuth && clerkAuth.userId) {
-    req.user = { id: clerkAuth.userId, role: 'admin', source: 'clerk' };
-    return next();
+  // clerkMiddleware() may be disabled in test mode; guard against missing auth state.
+  try {
+    const clerkAuth = getAuth(req);
+    if (clerkAuth && clerkAuth.userId) {
+      req.user = { id: clerkAuth.userId, role: 'admin', source: 'clerk' };
+      return next();
+    }
+  } catch {
+    // No Clerk session — fall through to JWT check.
   }
 
   // ── Custom JWT path (Android app / devices) ───────────────────────────────
