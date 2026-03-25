@@ -16,6 +16,7 @@ const policyRoutes     = require('./routes/policy');
 const heartbeatRoutes  = require('./routes/heartbeat');
 const violationRoutes  = require('./routes/violations');
 const enrolRoutes      = require('./routes/enrol');
+const partnerRoutes    = require('./routes/partners');
 const errorHandler     = require('./middleware/errorHandler');
 
 const app = express();
@@ -86,6 +87,7 @@ app.use('/heartbeat',  heartbeatRoutes);
 app.use('/violation',  violationRoutes);   // POST /violation
 app.use('/violations', violationRoutes);   // GET  /violations  (admin)
 app.use('/enrol',      enrolRoutes);       // POST /enrol/generate, GET /enrol/:token
+app.use('/partners',   partnerRoutes);     // Full accountability partner system
 
 // ── 404 fallthrough ──────────────────────────────────────────────────────────
 app.use((_req, res) => res.status(404).json({ error: 'Route not found.' }));
@@ -97,6 +99,10 @@ app.use(errorHandler);
 const PORT = env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`PORNBLOCK API listening on port ${PORT} [${env.NODE_ENV}]`);
+  // Start background poller for 72-hour partner approval delays (skip in test).
+  if (env.NODE_ENV !== 'test') {
+    require('./services/partnerPoller').start();
+  }
 });
 
 module.exports = app; // for testing

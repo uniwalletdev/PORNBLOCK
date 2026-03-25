@@ -136,6 +136,8 @@ CREATE TABLE IF NOT EXISTS accountability_partners (
                   CHECK (role IN ('primary', 'standard', 'observer')),
   status        TEXT        NOT NULL DEFAULT 'invited'
                   CHECK (status IN ('invited', 'active', 'revoked')),
+  invite_token              TEXT        UNIQUE,
+  invite_token_expires_at   TIMESTAMPTZ,
   invited_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -338,6 +340,76 @@ COMMENT ON COLUMN violations.screenshot_hash
 
 COMMENT ON COLUMN partner_approvals.delay_until
   IS 'Approved changes must not be applied until this timestamp, enforcing a cooling-off period.';
+
+
+-- ===========================================================================
+-- TABLE: partner_change_requests
+-- ===========================================================================
+-- User-submitted requests to change protection settings; require partner
+-- majority approval before taking effect after a mandatory 72-hour delay.
+-- ===========================================================================
+CREATE TABLE IF NOT EXISTS partner_change_requests (
+  id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id       UUID        NOT NULL
+                  REFERENCES users (id) ON DELETE CASCADE,
+  request_type  TEXT        NOT NULL
+                  CHECK (request_type IN (
+                    'remove_protection',
+                    'change_setting',
+                    'allowlist_site'
+                  )),
+  reason        TEXT        NOT NULL,
+  status        TEXT        NOT NULL DEFAULT 'pending'
+                  CHECK (status IN ('pending', 'approved', 'denied', 'executing', 'executed')),
+  payload       JSONB       NOT NULL DEFAULT '{}',
+  delay_until   TIMESTAMPTZ,
+  executed_at   TIMESTAMPTZ,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TRIGGER trg_partner_requests_updated_at
+  BEFORE UPDATE ON partner_change_requests
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE INDEX idx_pcr_user_id  ON partner_change_requests (user_id);
+CREATE INDEX idx_pcr_status   ON partner_change_requests (status);
+CREATE INDEX idx_pcr_delay    ON partner_change_requests (delay_until)
+  WHERE delay_until IS NOT NULL AND executed_at IS NULL;
+
+COMMENT ON TABLE partner_change_requests
+  IS 'Change requests submitted by users that require partner approval + 72-hour delay.';
+
+
+-- ===========================================================================
+-- TABLE: partner_actions
+-- ===========================================================================
+-- One row per partner per change-request. Stores the secure action token
+-- sent by email and records whether the partner approved or denied.
+-- ===========================================================================
+CREATE TABLE IF NOT EXISTS partner_actions (
+  id               UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  request_id       UUID        NOT NULL
+                     REFERENCES partner_change_requests (id) ON DELETE CASCADE,
+  partner_id       UUID        NOT NULL
+                     REFERENCES accountability_partners (id) ON DELETE CASCADE,
+  action_token     TEXT        NOT NULL UNIQUE,
+  action           TEXT        NOT NULL DEFAULT 'pending'
+                     CHECK (action IN ('pending', 'approved', 'denied')),
+  denial_reason    TEXT,
+  acted_at         TIMESTAMPTZ,
+  token_expires_at TIMESTAMPTZ NOT NULL,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  CONSTRAINT uq_action_per_partner_request UNIQUE (request_id, partner_id)
+);
+
+CREATE INDEX idx_pa_token      ON partner_actions (action_token);
+CREATE INDEX idx_pa_request_id ON partner_actions (request_id);
+CREATE INDEX idx_pa_partner_id ON partner_actions (partner_id);
+
+COMMENT ON TABLE partner_actions
+  IS 'Individual approve/deny votes from each partner. action_token is sent via email link.';
 
 
 COMMIT;
