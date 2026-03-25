@@ -89,9 +89,9 @@ app.use((_req, res) => res.status(404).json({ error: 'Route not found.' }));
 app.use(errorHandler);
 
 // ── Start ────────────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`PORNBLOCK API listening on port ${PORT} [${process.env.NODE_ENV}]`);
-});
+  console.log(`PORNBLOCK API listening on port ${PORT} [${process.env.NODE_ENV}]`)
+})
 
 module.exports = app; // for testing
