@@ -1,11 +1,6 @@
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import {
-  SignedIn,
-  SignedOut,
-  RedirectToSignIn,
-  useAuth,
-} from "@clerk/react";
+import { RedirectToSignIn, useAuth } from "@clerk/react";
 import { setTokenGetter } from "./lib/api.js";
 import Layout         from "./components/Layout.jsx";
 import LoginPage      from "./pages/LoginPage.jsx";
@@ -28,14 +23,12 @@ function ClerkTokenBridge() {
   return null;
 }
 
-/** Route guard — Clerk handles session state automatically. */
+/** Route guard — Clerk v6: useAuth() replaces removed SignedIn/SignedOut components. */
 function RequireAuth({ children }) {
-  return (
-    <>
-      <SignedIn>{children}</SignedIn>
-      <SignedOut><RedirectToSignIn /></SignedOut>
-    </>
-  );
+  const { isSignedIn, isLoaded } = useAuth();
+  if (!isLoaded) return null;
+  if (!isSignedIn) return <RedirectToSignIn />;
+  return <>{children}</>;
 }
 
 export default function App() {
