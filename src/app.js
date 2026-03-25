@@ -4,6 +4,7 @@ require('dotenv').config();
 
 const path    = require('node:path');
 const express = require('express');
+const cors    = require('cors');
 
 const authRoutes       = require('./routes/auth');
 const deviceRoutes     = require('./routes/devices');
@@ -14,6 +15,15 @@ const enrolRoutes      = require('./routes/enrol');
 const errorHandler     = require('./middleware/errorHandler');
 
 const app = express();
+
+// ── CORS ─────────────────────────────────────────────────────────────────────
+const allowedOrigins = process.env.FRONTEND_URL
+  ? process.env.FRONTEND_URL.split(',').map((o) => o.trim())
+  : ['http://localhost:5173'];
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
 
 // ── Body parsing ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '256kb' }));
@@ -26,7 +36,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 app.disable('x-powered-by');
 
 // ── Health check (no auth) ───────────────────────────────────────────────────
-app.get('/health', (_req, res) => res.json({ status: 'ok' }));
+app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: Date.now() }));
 
 // ── Routes ───────────────────────────────────────────────────────────────────
 app.use('/auth',       authRoutes);

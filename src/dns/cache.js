@@ -18,14 +18,22 @@ function normalise(domain) {
 
 /** Returns true if the domain is in the Redis blocklist cache. */
 async function isBlocked(domain) {
-  const val = await redis.get(BLOCK_PREFIX + normalise(domain));
-  return val === '1';
+  try {
+    const val = await redis.get(BLOCK_PREFIX + normalise(domain));
+    return val === '1';
+  } catch {
+    return false; // Redis unavailable — treat as cache miss, fall through to DB
+  }
 }
 
 /** Returns true if the domain is in the Redis allowlist cache. */
 async function isAllowed(domain) {
-  const val = await redis.get(ALLOW_PREFIX + normalise(domain));
-  return val === '1';
+  try {
+    const val = await redis.get(ALLOW_PREFIX + normalise(domain));
+    return val === '1';
+  } catch {
+    return false; // Redis unavailable — treat as cache miss, fall through to DB
+  }
 }
 
 /**
