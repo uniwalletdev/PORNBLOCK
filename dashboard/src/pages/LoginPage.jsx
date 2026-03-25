@@ -1,28 +1,23 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../lib/api.js";
-import { setAuth } from "../store/authStore.js";
+import { SignIn } from "@clerk/react";
 
 export default function LoginPage() {
-  const [email,    setEmail]    = useState("");
-  const [password, setPassword] = useState("");
-  const [error,    setError]    = useState(null);
-  const [loading,  setLoading]  = useState(false);
-  const navigate = useNavigate();
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-    try {
-      const { data } = await api.post("/auth/login", { email, password });
-      setAuth(data.token, data.user);
-      navigate("/");
-    } catch (err) {
-      setError(err.response?.data?.error || "Login failed. Check your credentials.");
-    } finally {
-      setLoading(false);
-    }
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-brand-50">
+      <SignIn
+        routing="hash"
+        afterSignInUrl="/"
+        appearance={{
+          elements: {
+            card: "shadow-lg rounded-2xl",
+            headerTitle: "text-brand-700 font-bold",
+            formButtonPrimary:
+              "bg-brand-700 hover:bg-brand-900 text-white text-sm font-semibold",
+          },
+        }}
+      />
+    </div>
+  );
+}
   }
 
   return (
