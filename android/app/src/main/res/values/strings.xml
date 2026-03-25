@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">PORNBLOCK</string>
+
+    <!-- Main screen -->
+    <string name="status_active">PORNBLOCK Active</string>
+    <string name="status_inactive">Protection Inactive</string>
+    <string name="status_vpn_active">VPN Filter: ON</string>
+    <string name="status_vpn_inactive">VPN Filter: OFF</string>
+    <string name="status_screen_active">Screen Monitor: ON</string>
+    <string name="status_screen_inactive">Screen Monitor: OFF</string>
+    <string name="support_link">Contact Support</string>
+
+    <!-- Enrolment -->
+    <string name="enrol_title">Scan QR Code</string>
+    <string name="enrol_subtitle">Scan the enrolment QR from your account dashboard</string>
+    <string name="enrol_scanning">Scanning…</string>
+    <string name="enrol_success">Device enrolled successfully!</string>
+    <string name="enrol_error">Enrolment failed. Please try again.</string>
+    <string name="enrol_expired">This QR code has expired. Please generate a new one.</string>
+    <string name="enrol_used">This QR code has already been used.</string>
+    <string name="enrol_camera_permission">Camera permission is required to scan the QR code.</string>
+    <string name="enrol_grant_permission">Grant Permission</string>
+
+    <!-- Block overlay -->
+    <string name="blocked_title">Content Blocked</string>
+    <string name="blocked_message">This content was blocked by PORNBLOCK.\nProtection is keeping you on track.</string>
+    <string name="blocked_dismiss">Dismiss</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_vpn">VPN Protection</string>
+    <string name="notification_channel_heartbeat">Protection Status</string>
+    <string name="notification_channel_screen">Screen Monitor</string>
+    <string name="notification_vpn_title">PORNBLOCK Active</string>
+    <string name="notification_vpn_text">DNS filter is running</string>
+    <string name="notification_heartbeat_title">Protection Running</string>
+    <string name="notification_heartbeat_text">Monitoring for violations</string>
+    <string name="notification_screen_title">Screen Monitor Active</string>
+    <string name="notification_screen_text">Analysing screen content</string>
+
+    <!-- Device admin -->
+    <string name="admin_description">PORNBLOCK requires Device Administrator access to prevent tampering and ensure protection remains active.</string>
+    <string name="admin_disable_warning">Disabling PORNBLOCK as Device Administrator will remove content protection from this device. Your accountability partner will be notified immediately.</string>
+
+    <!-- Support -->
+    <string name="support_url">https://pornblock.app/support</string>
+    <string name="privacy_url">https://pornblock.app/privacy</string>
+
+    <!-- MainActivity (new bindings) -->
+    <string name="status_protected">PROTECTED ✓</string>
+    <string name="status_partial">PARTIAL PROTECTION</string>
+    <string name="vpn_status_active">DNS Filter: Active ✓</string>
+    <string name="vpn_status_inactive">DNS Filter: Inactive ✗</string>
+    <string name="screen_status_active">Screen Monitor: Active ✓</string>
+    <string name="screen_status_inactive">Screen Monitor: Inactive ✗</string>
+    <string name="btn_enable_vpn">Enable DNS Filter</string>
+    <string name="btn_enable_screen">Enable Screen Monitor</string>
+    <string name="btn_activate_admin">Activate Device Admin</string>
+    <string name="btn_support">Contact Support</string>
+    <string name="vpn_permission_denied">VPN permission denied — DNS filter cannot start.</string>
+    <string name="screen_permission_denied">Screen capture permission denied.</string>
+    <string name="admin_rationale">Required to prevent tampering with protection settings.</string>
+    <string name="shield_description">Shield icon</string>
+
+    <!-- EnrolmentActivity -->
+    <string name="enrolment_title">Scan Enrolment QR</string>
+    <string name="enrolment_subtitle">Scan the QR code provided by your accountability partner.</string>
+    <string name="enrolment_invalid_qr">Invalid QR code. Please scan the enrolment QR from the dashboard.</string>
+    <string name="enrolment_token_used">This QR code has already been used.</string>
+    <string name="enrolment_token_invalid">Enrolment code not found or expired.</string>
+    <string name="enrolment_server_error">Server error (%d). Please try again.</string>
+    <string name="enrolment_network_error">Network error. Check your connection and try again.</string>
+    <string name="enrolment_validating">Validating code…</string>
+    <string name="enrolment_success">Enrolled as %s. Starting protection…</string>
+
+    <!-- BlockOverlayActivity -->
+    <string name="block_overlay_title">Content Blocked</string>
+    <string name="block_overlay_subtitle">Inappropriate content was detected and blocked to keep you on track.</string>
+    <string name="block_overlay_dismiss">Closing in %d seconds…</string>
+
+    <!-- Notification channels (verbose descriptions) -->
+    <string name="notification_channel_vpn_desc">Shows while DNS filtering is active</string>
+    <string name="notification_channel_heartbeat_desc">Sends periodic status updates to your accountability partner</string>
+    <string name="notification_channel_screen_desc">Shows while screen content is being analysed</string>
+</resources>

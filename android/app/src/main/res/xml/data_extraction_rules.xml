@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rules xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <deny />
+    </application>
+</rules>

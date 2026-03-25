@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PORNBLOCK — Device Setup</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand:   #6c2bd9;
+      --success: #16a34a;
+      --danger:  #dc2626;
+      --bg:      #f5f3ff;
+      --card:    #ffffff;
+      --text:    #1e1b2e;
+      --muted:   #6b7280;
+      --border:  #e5e7eb;
+      --radius:  12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 32px rgba(108,43,217,.10);
+      padding: 40px 36px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .logo { font-size: 1.5rem; font-weight: 800; color: var(--brand); margin-bottom: 8px; letter-spacing: -.5px; }
+    .subtitle { color: var(--muted); font-size: .875rem; margin-bottom: 28px; }
+
+    h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 6px; }
+    .device-name { font-size: 1rem; color: var(--muted); margin-bottom: 24px; }
+
+    .platform-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #f3f0ff;
+      color: var(--brand);
+      border-radius: 99px;
+      padding: 6px 16px;
+      font-size: .875rem;
+      font-weight: 600;
+      margin-bottom: 28px;
+    }
+
+    .steps {
+      text-align: left;
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .steps h2 { font-size: .875rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 12px; }
+    .steps ol { padding-left: 20px; }
+    .steps li { font-size: .9rem; margin-bottom: 8px; line-height: 1.5; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 14px 20px;
+      border-radius: var(--radius);
+      border: none;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .88; }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-outline { background: transparent; border: 2px solid var(--brand); color: var(--brand); margin-top: 10px; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    /* Loading state */
+    #state-loading { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .spinner {
+      width: 40px; height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--brand);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Success state */
+    #state-success { display: none; flex-direction: column; align-items: center; gap: 16px; }
+    .checkmark {
+      width: 72px; height: 72px;
+      background: #dcfce7;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+    .success-title { font-size: 1.5rem; font-weight: 800; color: var(--success); }
+    .success-sub   { color: var(--muted); font-size: .875rem; }
+
+    /* Error state */
+    #state-error { display: none; flex-direction: column; align-items: center; gap: 12px; }
+    .error-icon  { font-size: 2.5rem; }
+    .error-msg   { color: var(--danger); font-weight: 600; }
+    .error-sub   { color: var(--muted); font-size: .875rem; }
+
+    /* Main content */
+    #state-main  { display: none; }
+
+    /* Already-protected banner */
+    #checking-install {
+      display: none;
+      margin-top: 16px;
+      padding: 12px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 8px;
+      font-size: .875rem;
+      color: var(--success);
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">🛡 PORNBLOCK</div>
+  <div class="subtitle">Device Protection Setup</div>
+
+  <!-- Loading -->
+  <div id="state-loading">
+    <div class="spinner"></div>
+    <p style="color:var(--muted);font-size:.875rem">Validating your enrolment link…</p>
+  </div>
+
+  <!-- Main setup UI -->
+  <div id="state-main">
+    <h1 id="main-title">Protect This Device</h1>
+    <p class="device-name" id="main-device"></p>
+    <div class="platform-badge" id="main-platform-badge"></div>
+
+    <div class="steps" id="main-steps">
+      <h2>Installation Steps</h2>
+      <ol id="steps-list"></ol>
+    </div>
+
+    <a id="download-btn" class="btn btn-primary" href="#" download>
+      <span id="download-icon">⬇</span>
+      <span id="download-label">Download</span>
+    </a>
+
+    <div id="checking-install">
+      ✅ PORNBLOCK detected — your device is now protected!
+    </div>
+  </div>
+
+  <!-- Success (post-install) -->
+  <div id="state-success">
+    <div class="checkmark">✅</div>
+    <div class="success-title">Device Protected ✅</div>
+    <p class="success-sub" id="success-device-name"></p>
+    <p class="success-sub">PORNBLOCK is active and monitoring this device.</p>
+  </div>
+
+  <!-- Error -->
+  <div id="state-error">
+    <div class="error-icon">🔗</div>
+    <div class="error-msg" id="error-msg">Invalid enrolment link.</div>
+    <div class="error-sub" id="error-sub">This link may have expired or already been used.</div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    'use strict';
+
+    const API_BASE = '';  // Same origin; set to 'https://api.pornblock.app' if split domain
+
+    // ── Platform detection from User-Agent ───────────────────────────────────
+    function detectPlatform() {
+      const ua = navigator.userAgent.toLowerCase();
+      if (/iphone|ipad|ipod/.test(ua)) return 'ios';
+      if (/android/.test(ua))          return 'android';
+      if (/win/.test(ua))              return 'windows';
+      if (/mac/.test(ua))              return 'mac';
+      return null;
+    }
+
+    // ── DOM helpers ──────────────────────────────────────────────────────────
+    function show(id)  { document.getElementById(id).style.display = 'flex'; }
+    function hide(id)  { document.getElementById(id).style.display = 'none'; }
+
+    function showError(msg, sub) {
+      hide('state-loading');
+      hide('state-main');
+      document.getElementById('error-msg').textContent = msg;
+      if (sub) document.getElementById('error-sub').textContent = sub;
+      show('state-error');
+    }
+
+    // ── Main ──────────────────────────────────────────────────────────────────
+    async function init() {
+      const params = new URLSearchParams(window.location.search);
+      const token  = params.get('token');
+
+      if (!token) {
+        showError('No enrolment token found.', 'Please scan the QR code provided by your account holder.');
+        return;
+      }
+
+      // Basic UUID format check before hitting the API
+      const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (!UUID_RE.test(token)) {
+        showError('Invalid enrolment token.', 'The token in your link is not valid.');
+        return;
+      }
+
+      let data;
+      try {
+        const resp = await fetch(`${API_BASE}/enrol/${encodeURIComponent(token)}`);
+        if (resp.status === 404) { showError('Link not found.',     'This enrolment link does not exist.'); return; }
+        if (resp.status === 410) { showError('Link already used.',  'Each link can only be used once. Generate a new link from your dashboard.'); return; }
+        if (!resp.ok)            { showError('Server error.',       'Please try again or contact support.'); return; }
+        data = await resp.json();
+      } catch (err) {
+        showError('Network error.', 'Could not reach the PORNBLOCK server. Check your connection.');
+        return;
+      }
+
+      // ── Resolve platform ──────────────────────────────────────────────────
+      // Use API-supplied platform (set when QR was generated) if available,
+      // otherwise fall back to UA detection.
+      const platform = data.platform || detectPlatform();
+      const instructions = data.instructions || buildFallbackInstructions(platform);
+
+      // ── Populate UI ───────────────────────────────────────────────────────
+      document.title = `PORNBLOCK — Protect ${data.device_name}`;
+      document.getElementById('main-device').textContent = `Device: ${data.device_name}`;
+
+      const platformLabels = { ios: '🍎 iOS', android: '🤖 Android', windows: '🪟 Windows', mac: '🍏 macOS' };
+      document.getElementById('main-platform-badge').textContent = platformLabels[platform] || '📱 ' + (platform || 'Unknown');
+
+      const stepsList = document.getElementById('steps-list');
+      (instructions?.steps || ['Follow the on-screen prompts after downloading.']).forEach((step) => {
+        const li = document.createElement('li');
+        li.textContent = step;
+        stepsList.appendChild(li);
+      });
+
+      const downloadBtn = document.getElementById('download-btn');
+      if (instructions?.url) {
+        downloadBtn.href  = instructions.url;
+        downloadBtn.setAttribute('download', '');
+      } else {
+        downloadBtn.removeAttribute('href');
+        downloadBtn.disabled = true;
+      }
+      document.getElementById('download-label').textContent = instructions?.action || 'Download';
+
+      hide('state-loading');
+      show('state-main');
+
+      // ── Post-download install detection ───────────────────────────────────
+      // Polls a lightweight heartbeat endpoint. When the device agent first
+      // checks in, this page transitions to the "Device Protected ✅" state.
+      downloadBtn.addEventListener('click', () => {
+        startInstallPolling(data.device_name);
+      });
+    }
+
+    function buildFallbackInstructions(platform) {
+      const base = 'https://pornblock.app/downloads/';
+      const map  = {
+        ios:     { action: 'Download Profile',   url: base + 'pornblock.mobileconfig' },
+        android: { action: 'Download APK',       url: base + 'pornblock.apk' },
+        windows: { action: 'Download Installer', url: base + 'pornblock-setup.exe' },
+        mac:     { action: 'Download Package',   url: base + 'pornblock.pkg' },
+      };
+      return map[platform] || null;
+    }
+
+    // Poll for device heartbeat after the user clicks download.
+    // The device agent will POST /heartbeat once installed.
+    // We check the setup page's own API polling endpoint.
+    function startInstallPolling(deviceName) {
+      document.getElementById('checking-install').style.display = 'block';
+      const token = new URLSearchParams(window.location.search).get('token');
+
+      let attempts = 0;
+      const maxAttempts = 60; // poll for up to 5 minutes (5s interval)
+
+      const poll = setInterval(async () => {
+        attempts++;
+        if (attempts > maxAttempts) {
+          clearInterval(poll);
+          return;
+        }
+        try {
+          const resp = await fetch(`${API_BASE}/enrol/${encodeURIComponent(token)}/status`);
+          if (resp.ok) {
+            const { installed } = await resp.json();
+            if (installed) {
+              clearInterval(poll);
+              document.getElementById('success-device-name').textContent = `Device: ${deviceName}`;
+              hide('state-main');
+              show('state-success');
+            }
+          }
+        } catch (_) { /* network blip — keep polling */ }
+      }, 5000);
+    }
+
+    init();
+  })();
+</script>
+</body>
+</html>

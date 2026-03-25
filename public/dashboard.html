@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PORNBLOCK — Admin Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand:  #6c2bd9;
+      --bg:     #f5f3ff;
+      --card:   #ffffff;
+      --text:   #1e1b2e;
+      --muted:  #6b7280;
+      --border: #e5e7eb;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 32px 24px;
+    }
+
+    .page-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    .logo { font-size: 1.4rem; font-weight: 800; color: var(--brand); }
+    .page-title { font-size: 1.1rem; font-weight: 600; }
+
+    /* ── Device list card ─────────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 2px 16px rgba(108,43,217,.08);
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 20px;
+    }
+    .card-title { font-size: 1rem; font-weight: 700; }
+
+    table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+    th    { text-align: left; color: var(--muted); font-weight: 600; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    td    { padding: 12px 0; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-size: .75rem;
+      font-weight: 600;
+    }
+    .badge-active   { background: #dcfce7; color: #15803d; }
+    .badge-inactive { background: #fee2e2; color: #b91c1c; }
+    .badge-platform { background: #f3f0ff; color: var(--brand); }
+
+    /* ── Button ──────────────────────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px;
+      border-radius: 8px;
+      border: none;
+      font-size: .875rem; font-weight: 700;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-primary { background: var(--brand); color: #fff; }
+    .btn-sm      { padding: 6px 12px; font-size: .8rem; }
+    .btn-ghost   { background: #f3f0ff; color: var(--brand); }
+
+    /* ── QR Modal ────────────────────────────────────────────────────────── */
+    .modal-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 48px rgba(0,0,0,.25);
+      padding: 32px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 16px; right: 16px;
+      background: none; border: none;
+      font-size: 1.4rem; cursor: pointer; color: var(--muted);
+      line-height: 1;
+    }
+    .modal-close:hover { color: var(--text); }
+    .modal-title    { font-size: 1.2rem; font-weight: 800; margin-bottom: 4px; }
+    .modal-subtitle { color: var(--muted); font-size: .875rem; margin-bottom: 24px; }
+
+    #qr-image {
+      width: 220px; height: 220px;
+      border: 3px solid var(--brand);
+      border-radius: 12px;
+      margin: 0 auto 20px;
+      display: block;
+      object-fit: contain;
+    }
+    #qr-spinner {
+      width: 220px; height: 220px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+    }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--brand);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .modal-actions {
+      display: flex; flex-direction: column; gap: 10px; margin-top: 4px;
+    }
+
+    .url-copy {
+      display: flex; gap: 8px; align-items: center;
+    }
+    .url-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: .8rem;
+      color: var(--muted);
+      background: #fafafa;
+      outline: none;
+      min-width: 0;
+    }
+    .url-input:focus { border-color: var(--brand); }
+
+    .copy-feedback {
+      font-size: .75rem;
+      color: #16a34a;
+      height: 18px;
+      margin-top: 2px;
+    }
+
+    .expiry-note { color: var(--muted); font-size: .75rem; margin-top: 12px; }
+
+    /* ── Generate form ────────────────────────────────────────────────────── */
+    .gen-form {
+      display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 160px; }
+    label       { font-size: .8rem; font-weight: 600; color: var(--muted); }
+    input, select {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: .875rem;
+      outline: none;
+      background: #fafafa;
+    }
+    input:focus, select:focus { border-color: var(--brand); background: #fff; }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="logo">🛡 PORNBLOCK</div>
+  <div class="page-title">Admin Dashboard</div>
+</div>
+
+<!-- ── Generate Enrolment Link card ──────────────────────────────────────── -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Enrol New Device</div>
+  </div>
+  <form class="gen-form" id="gen-form">
+    <div class="form-group">
+      <label for="device-name">Device Name</label>
+      <input id="device-name" type="text" placeholder="e.g. John's iPhone" required maxlength="80" />
+    </div>
+    <div class="form-group" style="max-width:160px">
+      <label for="platform">Platform</label>
+      <select id="platform">
+        <option value="">Auto-detect</option>
+        <option value="ios">iOS</option>
+        <option value="android">Android</option>
+        <option value="windows">Windows</option>
+        <option value="mac">macOS</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary" id="gen-btn">
+      <span>📲</span> Generate QR
+    </button>
+  </form>
+</div>
+
+<!-- ── Devices table card ─────────────────────────────────────────────────── -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Enrolled Devices</div>
+    <button class="btn btn-ghost btn-sm" id="refresh-btn">↻ Refresh</button>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Device Name</th>
+        <th>Platform</th>
+        <th>Status</th>
+        <th>Last Seen</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="devices-table-body">
+      <tr><td colspan="5" style="color:var(--muted);padding:20px 0;text-align:center">Loading devices…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ── QR Modal ───────────────────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="qr-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title-text">
+  <div class="modal">
+    <button class="modal-close" id="modal-close-btn" aria-label="Close">✕</button>
+    <div class="modal-title" id="modal-title-text">📲 Scan to Enrol Device</div>
+    <div class="modal-subtitle" id="modal-device-subtitle"></div>
+
+    <!-- QR image / spinner -->
+    <div id="qr-spinner"><div class="spinner"></div></div>
+    <img id="qr-image" alt="QR code for device enrolment" style="display:none" />
+
+    <div class="url-copy">
+      <input class="url-input" id="enrol-url-input" type="text" readonly aria-label="Enrolment URL" />
+      <button class="btn btn-ghost btn-sm" id="copy-btn">Copy</button>
+    </div>
+    <div class="copy-feedback" id="copy-feedback"></div>
+
+    <div class="modal-actions">
+      <a id="download-qr-btn" class="btn btn-primary" href="#" download style="pointer-events:none;opacity:.45">
+        ⬇ Download QR as PNG
+      </a>
+    </div>
+
+    <div class="expiry-note" id="expiry-note"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ── Config ─────────────────────────────────────────────────────────────────
+  const API_BASE = '';  // same origin; adjust if API is on a separate domain
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let jwtToken = null;  // set from localStorage / login flow
+
+  function getAuthHeader() {
+    // In production: retrieve token from secure storage / session.
+    // Here we fall back to a sessionStorage key so the widget can be tested.
+    if (!jwtToken) jwtToken = sessionStorage.getItem('pb_token');
+    return jwtToken ? { 'Authorization': `Bearer ${jwtToken}` } : {};
+  }
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function formatDate(iso) {
+    if (!iso) return '—';
+    return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso));
+  }
+
+  function platformLabel(p) {
+    return { ios: '🍎 iOS', android: '🤖 Android', windows: '🪟 Windows', mac: '🍏 macOS' }[p] || p || '—';
+  }
+
+  // ── Modal helpers ──────────────────────────────────────────────────────────
+  function openModal()  {
+    const modal = document.getElementById('qr-modal');
+    modal.classList.add('open');
+    document.getElementById('modal-close-btn').focus();
+  }
+
+  function closeModal() {
+    document.getElementById('qr-modal').classList.remove('open');
+    // Reset modal state
+    document.getElementById('qr-image').style.display  = 'none';
+    document.getElementById('qr-spinner').style.display = 'flex';
+    document.getElementById('enrol-url-input').value    = '';
+    document.getElementById('copy-feedback').textContent = '';
+    const dlBtn = document.getElementById('download-qr-btn');
+    dlBtn.href = '#';
+    dlBtn.style.pointerEvents = 'none';
+    dlBtn.style.opacity = '.45';
+    dlBtn.removeAttribute('download');
+  }
+
+  // ── Populate modal with enrolment data ────────────────────────────────────
+  function populateModal(data) {
+    // Subtitle
+    document.getElementById('modal-device-subtitle').textContent =
+      `${data.device_name}${data.platform ? ' — ' + platformLabel(data.platform) : ''}`;
+
+    // QR image (data-URI from API)
+    const img = document.getElementById('qr-image');
+    img.src = data.qr_data_url;
+    img.onload = () => {
+      document.getElementById('qr-spinner').style.display = 'none';
+      img.style.display = 'block';
+    };
+
+    // URL field
+    document.getElementById('enrol-url-input').value = data.enrolment_url;
+
+    // Download button — uses the /enrol/:token/qr PNG endpoint
+    const dlBtn = document.getElementById('download-qr-btn');
+    dlBtn.href = `${API_BASE}/enrol/${data.token}/qr`;
+    dlBtn.setAttribute('download', `pornblock-enrol-${data.token.slice(0,8)}.png`);
+    dlBtn.style.pointerEvents = '';
+    dlBtn.style.opacity = '1';
+
+    // Set auth cookie on the download link via fetch + blob
+    dlBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      try {
+        const resp = await fetch(dlBtn.href, { headers: getAuthHeader() });
+        if (!resp.ok) { alert('Failed to download QR. Your session may have expired.'); return; }
+        const blob = await resp.blob();
+        const url  = URL.createObjectURL(blob);
+        const a    = Object.assign(document.createElement('a'), { href: url, download: dlBtn.getAttribute('download') });
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        alert('Download error: ' + err.message);
+      }
+    }, { once: true });
+
+    // Expiry note
+    document.getElementById('expiry-note').textContent =
+      `⏳ Expires at ${formatDate(data.expires_at)} — single use only`;
+  }
+
+  // ── Copy link ─────────────────────────────────────────────────────────────
+  document.getElementById('copy-btn').addEventListener('click', async () => {
+    const url = document.getElementById('enrol-url-input').value;
+    const fb  = document.getElementById('copy-feedback');
+    try {
+      await navigator.clipboard.writeText(url);
+      fb.textContent = '✅ Copied to clipboard!';
+      setTimeout(() => { fb.textContent = ''; }, 3000);
+    } catch (_) {
+      // Fallback for non-secure contexts
+      document.getElementById('enrol-url-input').select();
+      document.execCommand('copy');
+      fb.textContent = '✅ Copied!';
+      setTimeout(() => { fb.textContent = ''; }, 3000);
+    }
+  });
+
+  // ── Close modal on backdrop click / Escape ────────────────────────────────
+  document.getElementById('modal-close-btn').addEventListener('click', closeModal);
+  document.getElementById('qr-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // ── Generate form submit ─────────────────────────────────────────────────
+  document.getElementById('gen-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const deviceName = document.getElementById('device-name').value.trim();
+    const platform   = document.getElementById('platform').value || undefined;
+    const btn        = document.getElementById('gen-btn');
+
+    if (!deviceName) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Generating…';
+
+    try {
+      const resp = await fetch(`${API_BASE}/enrol/generate`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
+        body:    JSON.stringify({ device_name: deviceName, platform }),
+      });
+
+      if (resp.status === 401) { alert('Session expired — please log in again.'); return; }
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        alert('Error: ' + (err.error || resp.statusText));
+        return;
+      }
+
+      const data = await resp.json();
+      openModal();
+      populateModal(data);
+
+      // Reset form
+      document.getElementById('device-name').value = '';
+      document.getElementById('platform').value    = '';
+    } catch (err) {
+      alert('Network error: ' + err.message);
+    } finally {
+      btn.disabled    = false;
+      btn.innerHTML   = '<span>📲</span> Generate QR';
+    }
+  });
+
+  // ── Load devices table ────────────────────────────────────────────────────
+  async function loadDevices() {
+    const tbody = document.getElementById('devices-table-body');
+    try {
+      const resp = await fetch(`${API_BASE}/devices`, { headers: getAuthHeader() });
+      if (!resp.ok) { tbody.innerHTML = '<tr><td colspan="5" style="color:red">Failed to load devices.</td></tr>'; return; }
+      const { devices } = await resp.json();
+
+      if (!devices.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);padding:20px 0;text-align:center">No devices enrolled yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = devices.map((d) => `
+        <tr>
+          <td><strong>${escHtml(d.device_name)}</strong></td>
+          <td><span class="badge badge-platform">${platformLabel(d.platform)}</span></td>
+          <td><span class="badge ${d.protection_status === 'active' ? 'badge-active' : 'badge-inactive'}">${escHtml(d.protection_status)}</span></td>
+          <td>${formatDate(d.last_heartbeat)}</td>
+          <td><button class="btn btn-ghost btn-sm" onclick="triggerEnrolForDevice('${escHtml(d.id)}', '${escHtml(d.device_name)}')">🔄 Re-enrol</button></td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="5" style="color:red">Error: ${escHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  // ── Re-enrol shortcut (generates link for existing device name) ────────────
+  window.triggerEnrolForDevice = async function (deviceId, deviceName) {
+    document.getElementById('device-name').value = deviceName;
+    document.getElementById('gen-form').dispatchEvent(new Event('submit'));
+  };
+
+  // ── XSS-safe HTML escape ──────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  document.getElementById('refresh-btn').addEventListener('click', loadDevices);
+  loadDevices();
+})();
+</script>
+</body>
+</html>

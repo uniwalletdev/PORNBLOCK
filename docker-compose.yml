@@ -1,0 +1,125 @@
+version: "3.9"
+
+# ── PORNBLOCK — development docker-compose ────────────────────────────────────
+#
+#  Services:
+#    postgres  → localhost:5432
+#    redis     → localhost:6379
+#    api       → localhost:3000   (Node.js 20 / Express)
+#    dashboard → localhost:5173   (React 18 / Vite)
+#
+#  Usage:
+#    cp .env.example .env      # fill in secrets
+#    docker compose up --build
+#
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── PostgreSQL 15 ───────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: pornblock_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${DB_NAME:-pornblock}
+      POSTGRES_USER:     ${DB_USER:-pornblock}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?err_db_password_required}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Run schema on first boot (idempotent — only fires when volume is empty)
+      - ./src/db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-pornblock} -d ${DB_NAME:-pornblock}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - pornblock_net
+
+  # ── Redis 7 ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: pornblock_redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save ""
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - pornblock_net
+
+  # ── Backend API (Node.js 20 / Express) ──────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: pornblock_api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV:  development
+      PORT:      3000
+      DB_HOST:   postgres
+      DB_PORT:   5432
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379
+    ports:
+      - "${API_PORT:-3000}:3000"
+    volumes:
+      # Live-reload: mount source, exclude node_modules
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: npm run dev
+    networks:
+      - pornblock_net
+
+  # ── Admin Dashboard (React 18 / Vite) ───────────────────────────────────────
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+      target: development
+    container_name: pornblock_dashboard
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+    ports:
+      - "${DASHBOARD_PORT:-5173}:5173"
+    volumes:
+      - ./dashboard:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    networks:
+      - pornblock_net
+
+# ── Volumes ───────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# ── Networks ──────────────────────────────────────────────────────────────────
+networks:
+  pornblock_net:
+    driver: bridge

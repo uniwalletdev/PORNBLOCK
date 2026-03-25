@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="brand_purple">#6C2BD9</color>
+    <color name="brand_purple_dark">#5521B5</color>
+    <color name="brand_purple_light">#F3F0FF</color>
+    <color name="success_green">#16A34A</color>
+    <color name="danger_red">#DC2626</color>
+    <color name="warning_amber">#D97706</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="overlay_bg">#CC000000</color>
+    <color name="text_primary">#1E1B2E</color>
+    <color name="text_muted">#6B7280</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="background">#F5F3FF</color>
+</resources>
