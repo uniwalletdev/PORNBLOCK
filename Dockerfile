@@ -3,7 +3,7 @@
 # ── Base ──────────────────────────────────────────────────────────────────────
 FROM node:20-alpine AS base
 WORKDIR /app
-RUN apk add --no-cache dumb-init
+RUN apk add --no-cache dumb-init bash
 COPY package*.json ./
 
 # ── Development (live-reload via nodemon) ─────────────────────────────────────
