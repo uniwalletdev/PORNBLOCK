@@ -49,6 +49,12 @@ const corsOptions = {
   credentials: true,
 };
 
+// ── Security: remove fingerprinting header ───────────────────────────────────
+app.disable('x-powered-by');
+
+// ── Health check (no auth, no middleware — must be first) ───────────────────
+app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: Date.now() }));
+
 // Handle OPTIONS preflight for every route before any other middleware hits.
 app.options('*', cors(corsOptions));
 app.use(cors(corsOptions));
@@ -70,11 +76,6 @@ app.use(express.urlencoded({ extended: false }));
 // ── Static files (setup page, dashboard) ─────────────────────────────────
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-// ── Security: remove fingerprinting header ───────────────────────────────────
-app.disable('x-powered-by');
-
-// ── Health check (no auth) ───────────────────────────────────────────────────
-app.get('/health', (_req, res) => res.json({ status: 'ok', timestamp: Date.now() }));
 
 // ── Env check (development only — never exposes values, only presence) ───────
 if (env.NODE_ENV !== 'production') {
