@@ -3,46 +3,61 @@
 const Redis = require('ioredis');
 const { REDIS_URL } = require('./env');
 
-let _available = false;
+// If REDIS_URL is not set, export a no-op stub so the app starts without Redis.
+// Redis is used only for DNS caching — the app functions fully without it.
+if (!REDIS_URL) {
+  console.warn('[Redis] REDIS_URL not set — cache disabled, running without Redis.');
+  const stub = new Proxy({}, {
+    get(_, prop) {
+      if (prop === 'isAvailable') return () => false;
+      if (prop === 'on') return () => stub;
+      return () => Promise.resolve(null);
+    },
+  });
+  module.exports = stub;
+} else {
 
-// REDIS_URL is guaranteed set — validated by env.js at startup.
-const redis = new Redis(REDIS_URL, {
-  // 1 retry per command so commands fail fast when Redis is down.
-  maxRetriesPerRequest: 1,
-  enableReadyCheck: true,
-  // Don't connect immediately — connect() is called below so failure
-  // is caught and never blocks app startup.
-  lazyConnect: true,
-  // Reject queued commands immediately when offline instead of hanging.
-  enableOfflineQueue: false,
-  // Back off exponentially, give up after 5 reconnect attempts.
-  retryStrategy: (times) => (times > 5 ? null : Math.min(times * 500, 3000)),
-});
+  let _available = false;
 
-redis.on('ready', () => {
-  _available = true;
-  console.log('[Redis] Connected');
-});
+  const redis = new Redis(REDIS_URL, {
+    // 1 retry per command so commands fail fast when Redis is down.
+    maxRetriesPerRequest: 1,
+    enableReadyCheck: true,
+    // Don't connect immediately — connect() is called below so failure
+    // is caught and never blocks app startup.
+    lazyConnect: true,
+    // Reject queued commands immediately when offline instead of hanging.
+    enableOfflineQueue: false,
+    // Back off exponentially, give up after 5 reconnect attempts.
+    retryStrategy: (times) => (times > 5 ? null : Math.min(times * 500, 3000)),
+  });
 
-redis.on('error', (err) => {
-  _available = false;
-  console.error('[Redis] Connection error:', err.message);
-});
+  redis.on('ready', () => {
+    _available = true;
+    console.log('[Redis] Connected');
+  });
 
-redis.on('close', () => {
-  _available = false;
-});
+  redis.on('error', (err) => {
+    _available = false;
+    console.error('[Redis] Connection error:', err.message);
+  });
 
-redis.on('reconnecting', () => {
-  console.warn('[Redis] Reconnecting...');
-});
+  redis.on('close', () => {
+    _available = false;
+  });
 
-// Connect in the background — never blocks app startup.
-redis.connect().catch((err) => {
-  console.warn('[Redis] Initial connection failed (cache disabled):', err.message);
-});
+  redis.on('reconnecting', () => {
+    console.warn('[Redis] Reconnecting...');
+  });
 
-/** Returns true when Redis is currently reachable. */
-redis.isAvailable = () => _available;
+  // Connect in the background — never blocks app startup.
+  redis.connect().catch((err) => {
+    console.warn('[Redis] Initial connection failed (cache disabled):', err.message);
+  });
 
-module.exports = redis;
+  /** Returns true when Redis is currently reachable. */
+  redis.isAvailable = () => _available;
+
+  module.exports = redis;
+
+} // end else (REDIS_URL set)
